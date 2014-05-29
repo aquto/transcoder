@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block head %}
+    <link href="{{ url_for('static', filename='css/fileinput.min.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+    <div class="jumbotron">
+        <p>
+        <input type="file" name="file" id="file-upload">
+        </p>
+
+        <p>
+        <div class="progress progress-striped" id="progress" style='height: 40px; display: none'>
+        <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"/>
+        </div>
+        </p>
+
+        <div id="message"></div>
+        <form action='{{ url_for('transcode') }}' method='post' id='upload_form'>
+            <input type='hidden' name='media_url' id='media_url' value=''/>
+        </form>
+    </div>
+{% endblock %}
+{% block javascript %}
+    <script language="javascript" src="{{ url_for('static', filename='js/md5.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/S3MultipartUploader.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/fileinput.min.js') }}"></script>
+    <script language="javascript">
+        $("#file-upload").fileinput({'showRemove':false, 'showPreview':false, 'mainTemplate':'{preview}<div class="input-group {class}">{caption}<div class="input-group-btn">{browse}{upload}</div></div>', 'uploadClass': 'btn btn-default uploadButton'});
+
+        $(function () {
+            var fileDOM = $("#file-upload");
+            var settings = {
+                s3BaseUrl: "{{ S3_BASE_URL }}",
+                s3AccessKey: "{{ AWS_ACCESS_KEY_ID }}",
+                s3BucketName: "{{ S3_BUCKET_NAME }}",
+                s3Folder: "{{ S3_FOLDER }}",
+                serverInitMultipartUrl: "{{ url_for('init_multipart') }}",
+
+                onChange: function () {
+                    console.log("onChange");
+                },
+
+                onProgress: function (e) {
+                    var progress = e.loaded / e.total * 100;
+                    if (progress == 100) {
+                        $("#progress").removeClass("active");
+                    }
+                    else {
+                        $("#progress").addClass("active");
+                        $("#progress").css("display", "block");
+                    }
+                    $("#progress-bar").css("width", progress + "%");
+                },
+
+                onDone: function (url) {
+                    $(".uploadButton").text("Upload").removeAttr("disabled");
+                    $("#message").html("Upload done!");
+                    $("#media_url").val(url);
+                    //$("#upload_form").submit()
+                }
+            };
+
+            var uploader = new S3MultipartUploader(fileDOM, settings);
+            $(".uploadButton").click(function () {
+                uploader.startUpload();
+                $(this).text("Uploading...").attr("disabled", "disabled");
+            });
+        });
+    </script>
+{% endblock %}
