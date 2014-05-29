@@ -46,9 +46,6 @@
                     if (progress == 100) {
                         $("#progress").removeClass("active");
                     }
-                    else {
-                        $("#progress").addClass("active").css("display", "block");
-                    }
                     $("#progress-bar").css("width", progress + "%");
                 },
 
@@ -62,6 +59,7 @@
             $(".uploadButton").click(function () {
                 uploader.startUpload();
                 $(this).text("Uploading...").attr("disabled", "disabled");
+                $("#progress").addClass("active").css("display", "block");
             });
         });
     </script>
