@@ -4,10 +4,11 @@ import urllib
 import base64
 import hmac
 import hashlib
+import pprint
+
 from boto import elastictranscoder
 from flask import Flask, request, render_template, jsonify
 
-import pprint
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -36,7 +37,8 @@ S3_FOLDER = app.config['S3_FOLDER'].strip('/')
 
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html", AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID, S3_BASE_URL=S3_BASE_URL, S3_BUCKET_NAME=S3_BUCKET_NAME, S3_BUCKET_URL=S3_BUCKET_URL, S3_FOLDER=S3_FOLDER)
+    return render_template("index.html", AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID, S3_BASE_URL=S3_BASE_URL, S3_BUCKET_NAME=S3_BUCKET_NAME, S3_BUCKET_URL=S3_BUCKET_URL,
+                           S3_FOLDER=S3_FOLDER)
 
 
 @app.route("/init_multipart", methods=["GET"])
@@ -146,7 +148,6 @@ def sign_string(string):
 
 @app.route('/transcode/', methods=['POST', 'GET'])
 def transcode():
-
     media_url = request.form['media_url']
 
     media_file = urllib.unquote(media_url).decode('utf8').rsplit('/', 1)[-1]
