@@ -4,22 +4,45 @@
 {% endblock %}
 {% block body %}
     <div class="jumbotron">
-        <p>
-            <input type="file" name="file" id="file-upload">
-        </p>
+        <ul class="nav nav-pills">
+            <li class="dropdown active">
+                <a style="-webkit-box-shadow: rgba(255, 255, 255, 0.14902) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px; -webkit-user-select: none; background-color: rgb(66, 139, 202); background-image: linear-gradient(rgb(66, 139, 202) 0px, rgb(45, 108, 162) 100%); background-repeat: repeat-x; border-bottom-color: rgb(43, 102, 154); border-bottom-left-radius: 0px; border-bottom-right-radius: 0px; border-bottom-style: solid; border-bottom-width: 1px; border-collapse: separate; border-image-outset: 0px; border-image-repeat: stretch; border-image-slice: 100%; border-image-source: none; border-image-width: 1; border-left-color: rgb(43, 102, 154); border-left-style: solid; border-left-width: 1px; border-right-color: rgb(43, 102, 154); border-right-style: solid; border-right-width: 1px; border-top-color: rgb(43, 102, 154); border-top-left-radius: 0px; border-top-right-radius: 0px; border-top-style: solid; border-top-width: 1px; box-shadow: rgba(255, 255, 255, 0.14902) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px; box-sizing: border-box; color: rgb(255, 255, 255); cursor: pointer; display: inline-block; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: normal; height: 34px; line-height: 20px; list-style-image: none; list-style-position: outside; list-style-type: circle; margin-bottom: 0px; margin-left: -1px; overflow-x: hidden; overflow-y: hidden; padding-bottom: 6px; padding-left: 12px; padding-right: 12px; padding-top: 6px; position: relative; text-align: center; text-shadow: rgba(0, 0, 0, 0.2) 0px -1px 0px; vertical-align: middle; white-space: nowrap; width: 115px; Rendered Fonts Helvetica Neue—10 glyphs"
+                   id="presets" role="button" data-toggle="dropdown">Preset <b class="caret"></b></a>
+                <ul id="preset_list" class="dropdown-menu" role="menu" aria-labelledby="presets">
+                    {% for preset in presets %}
+                        <li role='presentation'><a role='menuitem' tabindex='-1'
+                                                   preset_id='{{ preset['Id'] }}'
+                                                   name='{{ preset['Name'].strip('System preset: ') }}'
+                                                   description='{{ preset['Description'].strip('System preset: ') }}'
+                                                   data='{{ preset['Data'] }}'>{{ preset['Name'].strip('System preset: ') }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+            <ul>
+                <input type="file" name="file" id="file-upload">
+            </ul>
+        </ul>
+        <div class="progress progress-striped" id="progress" style='height: 30px; display: none; text-align:center;'>
+            <span class="progress-value"
+                  style="position: absolute; text-align: center; vertical-align: middle; line-height: 30px; font-size: 16px; color: black">Uploading...
+            </span>
 
-
-        <p>
-            <div class="progress progress-striped" id="progress" style='height: 40px; display: none'>
-                <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+            <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                 style="width: 0%;">
             </div>
-        </p>
-
-        <div id="message"></div>
+        </div>
         <form action='{{ url_for('transcode') }}' method='post' id='upload_form'>
             <input type='hidden' name='media_url' id='media_url' value=''/>
+            <input type='hidden' name='preset_id' id='preset_id' value=''/>
         </form>
     </div>
+    <div id="preset_info" style="display:none;" class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">Panel title</h3>
+        </div>
+        <div id="preset_content" class="panel-body"></div>
+    </div>
+
 {% endblock %}
 {% block javascript %}
     <script language="javascript" src="{{ url_for('static', filename='js/md5.js') }}"></script>
@@ -60,6 +83,16 @@
                 uploader.startUpload();
                 $(this).text("Uploading...").attr("disabled", "disabled");
                 $("#progress").addClass("active").css("display", "block");
+            });
+
+            $("#preset_list li > a").each(function () {
+                $(this).click(function () {
+                    $("#preset_id").val($(this).attr('preset_id'));
+                    $("#preset_info").css("display", "block");
+                    $("#preset_info h3").text($(this).attr('name') + " - " + $(this).attr('description'));
+                    $("#preset_content").html("<pre>" + $(this).attr('data') + "</pre>");
+                });
+
             });
         });
     </script>

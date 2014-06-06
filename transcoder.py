@@ -37,8 +37,19 @@ S3_FOLDER = app.config['S3_FOLDER'].strip('/')
 
 @app.route("/", methods=["GET"])
 def index():
+    transcode = elastictranscoder.connect_to_region(AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                                    aws_secret_access_key=AWS_SECRET_KEY)
+
+    import pprint
+
+    pp = pprint.PrettyPrinter()
+
+    presets = []
+    for preset in transcode.list_presets()['Presets']:
+        presets.append({'Id': preset['Id'], 'Name': preset['Name'], 'Description': preset['Description'], 'Data': pp.pformat(preset)})
+
     return render_template("index.html", AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID, S3_BASE_URL=S3_BASE_URL, S3_BUCKET_NAME=S3_BUCKET_NAME, S3_BUCKET_URL=S3_BUCKET_URL,
-                           S3_FOLDER=S3_FOLDER)
+                           S3_FOLDER=S3_FOLDER, presets=sorted(presets, key=lambda k: k['Name']))
 
 
 @app.route("/init_multipart", methods=["GET"])
@@ -149,6 +160,7 @@ def sign_string(string):
 @app.route('/transcode/', methods=['POST', 'GET'])
 def transcode():
     media_url = request.form['media_url']
+    preset_id = request.form['preset_id']
 
     media_file = urllib.unquote(media_url).decode('utf8').rsplit('/', 1)[-1]
 
@@ -164,8 +176,7 @@ def transcode():
     transcode_outputs = [
         {
             'Key': path.splitext(media_file)[0],
-            # iPhone4s
-            'PresetId': '1351620000001-100020',
+            'PresetId': preset_id,
             'Rotate': 'auto',
             'ThumbnailPattern': 'thumbnail-{count}'
         }
